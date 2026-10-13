@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marcos Eduardo</title>
+<meta name="description" content="Marcos Eduardo, engenheiro de cibersegurança. Criou sozinho o Fence, app de voz, chat e tela para quem joga.">
+<meta property="og:title" content="Marcos Eduardo">
+<meta property="og:description" content="Criei o Fence sozinho: voz, chat e tela para quem joga, do primeiro commit ao app no ar.">
+<meta property="og:image" content="https://madukads.github.io/img/heroi-1200.webp">
+<meta name="theme-color" content="#08050f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308050f'/%3E%3Cpath d='M9 26V12l7-7 7 7v14M13 26v-7a3 3 0 0 1 6 0v7' fill='none' stroke='%23a78bfa' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abismo: #08050f;
+    --nave: #130c22;
+    --nave-borda: #2a1d45;
+    --vitral: #8b5cf6;
+    --lirio: #c9b8fb;
+    --pergaminho: #ece6f6;
+    --penumbra: #a197b8;
+    --vela: #f2b45a;
+    --display: "Cinzel", "Trajan Pro", Georgia, serif;
+    --texto: "Spectral", Georgia, serif;
+    --gutter: clamp(16px, 5vw, 72px);
+    --coluna: 40rem;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--abismo);
+    color: var(--pergaminho);
+    font-family: var(--texto);
+    font-size: 1.1875rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img, video { display: block; max-width: 100%; }
+  a { color: var(--lirio); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  a:hover { color: var(--pergaminho); }
+  :focus-visible { outline: 2px solid var(--vela); outline-offset: 3px; border-radius: 4px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.1; margin: 0; }
+  h2 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); letter-spacing: .02em; }
+  h3 { font-size: 1.15rem; letter-spacing: .04em; color: var(--lirio); font-weight: 500; }
+  p { margin: 0 0 1em; }
+
+  /* ---------- Capa: a catedral acende ---------- */
+  .capa {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: clamp(28px, 6vh, 64px) var(--gutter) clamp(32px, 7vh, 72px);
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .capa__arte {
+    position: absolute; inset: 0; z-index: -2;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: 50% 62%;
+    animation: acender 2.8s cubic-bezier(.2,.7,.2,1) .15s both;
+    filter: brightness(1.05);
+  }
+  .capa__luz {
+    position: absolute; inset: 0; z-index: -1;
+    background:
+      radial-gradient(38% 30% at 57% 56%, rgba(139,92,246,.30), transparent 70%),
+      linear-gradient(180deg, rgba(8,5,15,.9) 0%, rgba(8,5,15,.2) 32%, rgba(8,5,15,0) 52%, rgba(8,5,15,.55) 78%, rgba(8,5,15,1) 100%);
+    animation: vitrais 2.8s ease-out .9s both;
+  }
+  @keyframes acender { from { filter: brightness(.08) saturate(.4); transform: scale(1.04); } to { filter: brightness(1.05) saturate(1.1); transform: scale(1); } }
+  @keyframes vitrais { from { opacity: .55; } to { opacity: 1; } }
+
+  .capa__nome {
+    text-align: center;
+    font-size: clamp(2.6rem, 10.5vw, 9rem);
+    letter-spacing: .06em;
+    line-height: .95;
+    font-weight: 700;
+    text-shadow: 0 0 40px rgba(139,92,246,.55), 0 2px 0 rgba(0,0,0,.6);
+  }
+  .capa__nome span { display: block; font-size: max(.28em, 1rem); letter-spacing: .2em; font-weight: 500; color: var(--lirio); margin-top: .5em; padding-left: .2em; }
+  .capa__rodape {
+    grid-row: 3;
+    width: 100%; max-width: 1180px; justify-self: center;
+    display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px 48px;
+  }
+  .capa__frase { max-width: 34rem; font-size: clamp(1.2rem, 2.2vw, 1.5rem); line-height: 1.5; margin: 0; }
+  .capa__frase em { color: var(--lirio); font-style: italic; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 12px; }
+  .botao {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 22px;
+    font-family: var(--display); font-size: .95rem; font-weight: 500; letter-spacing: .06em;
+    color: var(--pergaminho); text-decoration: none;
+    border: 1px solid rgba(201,184,251,.35);
+    border-radius: 999px;
+    background: rgba(19,12,34,.55);
+    backdrop-filter: blur(6px);
+    transition: border-color .2s, background .2s;
+  }
+  .botao:hover { border-color: var(--lirio); background: rgba(139,92,246,.22); color: var(--pergaminho); }
+  .botao--forte { background: var(--vitral); border-color: var(--vitral); }
+  .botao--forte:hover { background: #9d74ff; border-color: #9d74ff; }
+
+  /* ---------- Seções ---------- */
+  section { padding: clamp(72px, 12vw, 150px) var(--gutter) 0; }
+  .miolo { max-width: 1180px; margin: 0 auto; }
+  .intro { max-width: var(--coluna); }
+  .intro h2 { margin-bottom: .45em; }
+  .intro p { color: var(--pergaminho); }
+  .apagado { color: var(--penumbra); }
+
+  .print {
+    margin: clamp(40px, 6vw, 64px) 0 0;
+    border-radius: 14px;
+    border: 1px solid var(--nave-borda);
+    overflow: hidden;
+    box-shadow: 0 40px 120px -30px rgba(139,92,246,.45);
+  }
+  .print figcaption { padding: 12px 18px; font-size: .95rem; color: var(--penumbra); background: var(--nave); border-top: 1px solid var(--nave-borda); }
+
+  .partes {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 40px 48px; margin-top: clamp(48px, 7vw, 80px);
+  }
+  .partes h3 { margin-bottom: .55em; }
+  .partes p { font-size: 1.05rem; color: var(--penumbra); margin: 0; }
+  .partes strong { color: var(--pergaminho); font-weight: 500; }
+
+  /* Efeitos de perfil */
+  .efeitos { margin-top: clamp(64px, 9vw, 110px); }
+  .efeitos__topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 40px; margin-bottom: 28px; }
+  .efeitos__topo p { max-width: 30rem; margin: 0; color: var(--penumbra); font-size: 1.05rem; }
+  .cartoes { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(10px, 2vw, 22px); }
+  .cartao {
+    position: relative; margin: 0; padding: 0;
+    border: 0; background: none; cursor: pointer;
+    border-radius: 14px; overflow: hidden;
+    aspect-ratio: 524 / 978;
+  }
+  .cartao video { width: 100%; height: 100%; object-fit: cover; }
+  .cartao figcaption {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 28px 14px 12px;
+    font-family: var(--display); font-size: .9rem; letter-spacing: .05em; text-align: center;
+    background: linear-gradient(transparent, rgba(8,5,15,.92));
+  }
+
+  /* ---------- Por dentro ---------- */
+  .mapa { margin-top: clamp(40px, 6vw, 64px); display: grid; gap: 0; }
+  .mapa__linha { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 3vw, 40px); }
+  .no {
+    background: var(--nave); border: 1px solid var(--nave-borda); border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .no h3 { color: var(--pergaminho); font-size: 1.1rem; margin-bottom: .35em; }
+  .no p { margin: 0; font-size: 1rem; color: var(--penumbra); line-height: 1.5; }
+  .no ul { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .no li { font-size: .85rem; padding: 3px 10px; border-radius: 999px; background: rgba(139,92,246,.14); color: var(--lirio); }
+  .no--midia { border-color: rgba(139,92,246,.55); box-shadow: inset 0 0 40px rgba(139,92,246,.12); }
+  .ligacao {
+    position: relative; display: grid; place-items: center;
+    min-height: 74px; padding: 10px 0;
+    font-size: .95rem; font-style: italic; color: var(--penumbra); text-align: center;
+  }
+  .ligacao::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+    background: linear-gradient(var(--nave-borda), var(--vitral), var(--nave-borda));
+  }
+  .ligacao span { position: relative; background: var(--abismo); padding: 4px 12px; max-width: 18rem; line-height: 1.35; }
+  .mapa__lado { position: relative; }
+  .mapa__lado .ligacao--h {
+    position: absolute; top: 50%; left: 100%; width: clamp(14px, 3vw, 40px); height: 1px;
+    background: var(--vitral); min-height: 0; padding: 0;
+  }
+  .mapa__lado .ligacao--h::before { display: none; }
+  .ligacao--h b { position: absolute; left: 50%; top: -1.7em; transform: translateX(-50%); font-weight: 400; font-size: .8rem; color: var(--penumbra); }
+
+  /* ---------- Linha do tempo ---------- */
+  .tempo { list-style: none; margin: clamp(40px, 6vw, 64px) 0 0; padding: 0; max-width: 46rem; position: relative; }
+  .tempo::before { content: ""; position: absolute; left: 7.4rem; top: 10px; bottom: 10px; width: 1px; background: linear-gradient(var(--vitral), var(--nave-borda)); }
+  .tempo li { display: grid; grid-template-columns: 6.4rem 1fr; gap: 0 2rem; padding: 0 0 26px; position: relative; }
+  .tempo li::before {
+    content: ""; position: absolute; left: calc(7.4rem - 4px); top: .62em;
+    width: 9px; height: 9px; border-radius: 50%; background: var(--abismo); border: 1px solid var(--vitral);
+  }
+  .tempo time { font-family: var(--display); font-size: .95rem; letter-spacing: .04em; color: var(--lirio); text-align: right; padding-top: .1em; }
+  .tempo p { margin: 0; }
+  .tempo small { display: block; font-size: .9rem; color: var(--penumbra); }
+  .tempo .agora::before { background: var(--vela); border-color: var(--vela); box-shadow: 0 0 0 5px rgba(242,180,90,.18), 0 0 18px rgba(242,180,90,.7); }
+  .tempo .agora time { color: var(--vela); }
+
+  /* ---------- Ferramentas ---------- */
+  .ferramentas { margin-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 36px 56px; }
+  .ferramentas h3 { margin-bottom: .6em; }
+  .ferramentas p { margin: 0; font-size: 1.05rem; color: var(--penumbra); }
+
+  /* ---------- Fim ---------- */
+  .fim { padding-bottom: clamp(64px, 10vw, 120px); }
+  .fim .miolo { border-top: 1px solid var(--nave-borda); padding-top: clamp(56px, 8vw, 96px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 32px; }
+  .fim h2 { font-size: clamp(2rem, 4.5vw, 3rem); }
+  .fim p { margin: .6em 0 0; color: var(--penumbra); }
+
+  @media (max-width: 1080px) { .partes { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 760px) {
+    .partes { grid-template-columns: 1fr; }
+    .mapa__linha:nth-child(2) { display: none; }
+    body { font-size: 1.0625rem; }
+    .cartoes { grid-template-columns: repeat(2, 1fr); }
+    .mapa__linha { grid-template-columns: 1fr; gap: 14px; }
+    .mapa__lado .ligacao--h { display: none; }
+    .tempo::before { left: 4px; }
+    .tempo li { grid-template-columns: 1fr; padding-left: 28px; }
+    .tempo li::before { left: 0; }
+    .tempo time { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="capa">
+  <img class="capa__arte" src="img/jogo.webp" alt="" fetchpriority="high">
+  <div class="capa__luz" aria-hidden="true"></div>
+
+  <h1 class="capa__nome">Marcos Eduardo<span>cibersegurança e código</span></h1>
+
+  <div class="capa__rodape">
+    <p class="capa__frase">Criei o <em>Fence</em> sozinho: voz, chat e tela para quem joga, do primeiro commit ao app no ar, com servidor próprio em São Paulo.</p>
+    <nav class="acoes" aria-label="Links principais">
+      <a class="botao botao--forte" href="https://fencenetwork.tech">Baixar o Fence</a>
+      <a class="botao" href="https://www.linkedin.com/in/marcos-martins-3bb956350/">LinkedIn</a>
+      <a class="botao" href="mailto:contato@fencenetwork.tech">E-mail</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="fence">
+    <div class="miolo">
+      <div class="intro">
+        <h2>Fence</h2>
+        <p>Um app para o grupo jogar junto: chamada de voz, chat, mensagem privada e compartilhamento de tela, com a cara de quem usa. Desenhei, programei, publiquei e mantenho tudo: o programa de Windows, o servidor, o app Android, a infraestrutura e o site.</p>
+        <p class="apagado">O primeiro commit foi em 2 de setembro de 2026. Seis semanas depois, são cerca de 100 mil linhas, mais de 350 commits e a versão 0.3.123 no ar.</p>
+      </div>
+
+      <figure class="print">
+        <img src="img/heroi-1200.webp" alt="Fence com o servidor A Cerca aberto: canais de voz à esquerda, chat no meio e membros à direita" width="1200" height="749" loading="lazy">
+        <figcaption>O servidor de exemplo do site, com o tema Gótico.</figcaption>
+      </figure>
+
+      <div class="partes">
+        <div>
+          <h3>Voz e tela</h3>
+          <p>Mídia num servidor <strong>LiveKit</strong> próprio. Tela até <strong>1080p e 120 quadros</strong>, recebida só por quem escolhe assistir. Redução de ruído com rede neural em <strong>WebAssembly</strong>.</p>
+        </div>
+        <div>
+          <h3>Som do jogo sem eco</h3>
+          <p>Um módulo em <strong>C++</strong> captura o áudio do Windows por <strong>WASAPI</strong> excluindo o próprio Fence. Quem assiste ouve o jogo, mas não ouve a chamada de volta.</p>
+        </div>
+        <div>
+          <h3>Segurança</h3>
+          <p>Senhas com <strong>argon2</strong>, sessões <strong>JWT</strong>, <strong>2FA</strong> obrigatório para administrador. Mensagens privadas ficam só com a dupla, nem a equipe lê.</p>
+        </div>
+        <div>
+          <h3>Feito para jogar</h3>
+          <p>Sobreposição dentro do jogo em <strong>Rust</strong>. Elo e partidas de Riot, Steam, FACEIT, Gamers Club e Leetify. Clipes do Allstar chegam na conversa.</p>
+        </div>
+      </div>
+
+      <div class="efeitos">
+        <div class="efeitos__topo">
+          <h3>Efeitos de perfil</h3>
+          <p>Partículas, shaders e física rodando no cartão de cada pessoa. Passe o mouse ou toque para ver.</p>
+        </div>
+        <div class="cartoes">
+          <figure class="cartao" tabindex="0">
+            <video src="fx/purple-hellfire.mp4" poster="fx/purple-hellfire-poster.webp" muted loop playsinline preload="none" aria-label="Efeito Purple Hellfire"></video>
+            <figcaption>Purple Hellfire</figcaption>
+          </figure>
+          <figure class="cartao" tabindex="0">
+            <video src="fx/crimson-ascension.mp4" poster="fx/crimson-ascension-poster.webp" muted loop playsinline preload="none" aria-label="Efeito Crimson Ascension"></video>
+            <figcaption>Crimson Ascension</figcaption>
+          </figure>
+          <figure class="cartao" tabindex="0">
+            <video src="fx/geada-polar.mp4" poster="fx/geada-polar-poster.webp" muted loop playsinline preload="none" aria-label="Efeito Geada Polar"></video>
+            <figcaption>Geada Polar</figcaption>
+          </figure>
+          <figure class="cartao" tabindex="0">
+            <video src="fx/ouro-liquido.mp4" poster="fx/ouro-liquido-poster.webp" muted loop playsinline preload="none" aria-label="Efeito Ouro Líquido"></video>
+            <figcaption>Ouro Líquido</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="por-dentro">
+    <div class="miolo">
+      <div class="intro">
+        <h2>Por dentro</h2>
+        <p>Cinco peças. Os apps falam com o servidor para conta, chat e presença, e com o LiveKit para áudio e vídeo. O servidor só emite o passe da sala, a mídia não passa por ele.</p>
+      </div>
+
+      <div class="mapa" role="img" aria-label="Diagrama: app de Windows e app Android ligados ao servidor por HTTPS e WebSocket e ao LiveKit por WebRTC; o servidor emite o passe da sala para o LiveKit e consulta as APIs dos jogos.">
+        <div class="mapa__linha">
+          <div class="no">
+            <h3>App de Windows</h3>
+            <p>Electron e React. Módulos nativos para o que o navegador não alcança.</p>
+            <ul><li>React</li><li>Rust: sobreposição</li><li>C++: áudio</li><li>three.js</li></ul>
+          </div>
+          <div class="no">
+            <h3>App Android</h3>
+            <p>Expo e React Native, com o mesmo visual do PC.</p>
+            <ul><li>React Native</li><li>TypeScript</li><li>LiveKit</li></ul>
+          </div>
+        </div>
+
+        <div class="mapa__linha">
+          <div class="ligacao"><span>HTTPS e WebSocket: login, chat, presença</span></div>
+          <div class="ligacao"><span>WebRTC por UDP: voz, câmera e tela</span></div>
+        </div>
+
+        <div class="mapa__linha">
+          <div class="no mapa__lado">
+            <h3>Servidor</h3>
+            <p>Node e Express atrás do Caddy, em Docker, num servidor em São Paulo.</p>
+            <ul><li>argon2</li><li>JWT</li><li>TOTP</li><li>WebSocket</li></ul>
+            <i class="ligacao ligacao--h" aria-hidden="true"><b>passe</b></i>
+          </div>
+          <div class="no no--midia">
+            <h3>LiveKit</h3>
+            <p>Encaminha áudio e vídeo entre as pessoas da sala, sem misturar nem gravar.</p>
+            <ul><li>SFU</li><li>uma porta UDP</li></ul>
+          </div>
+        </div>
+
+        <div class="mapa__linha">
+          <div class="ligacao"><span>APIs dos jogos e serviços</span></div>
+          <div></div>
+        </div>
+
+        <div class="no">
+          <h3>Integrações</h3>
+          <ul><li>Riot</li><li>Steam</li><li>FACEIT</li><li>Gamers Club</li><li>Leetify</li><li>Allstar</li><li>Spotify</li><li>YouTube</li><li>ElevenLabs</li><li>Google</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="linha-do-tempo">
+    <div class="miolo">
+      <div class="intro">
+        <h2>Seis semanas</h2>
+        <p>Algumas das versões que saíram até aqui, das 185 marcadas no repositório.</p>
+      </div>
+      <ol class="tempo">
+        <li><time datetime="2026-09-02">2 set</time><p>Primeiro commit<small>Voz, tela e chat num servidor próprio.</small></p></li>
+        <li><time datetime="2026-09-12">12 set</time><p>Contas de verdade<small>E-mail confirmado, login com Google e Steam, 2FA para administrador.</small></p></li>
+        <li><time datetime="2026-09-13">13 set</time><p>Atualização silenciosa<small>O app se atualiza sozinho a partir do próprio servidor.</small></p></li>
+        <li><time datetime="2026-09-23">23 set</time><p>Sobreposição nos jogos<small>Painel por cima do jogo, escrito em Rust.</small></p></li>
+        <li><time datetime="2026-09-28">28 set</time><p>Temas animados e clipes<small>Shaders no fundo do app. Clipes do Allstar chegam na conversa.</small></p></li>
+        <li><time datetime="2026-10-01">1 out</time><p>Efeitos de perfil<small>Partículas e física no cartão inteiro.</small></p></li>
+        <li><time datetime="2026-10-02">2 out</time><p>Tela de chamada nova<small>Grade automática, câmera e barra de controles.</small></p></li>
+        <li><time datetime="2026-10-05">5 out</time><p>Mascote que fala<small>Avisos falados na chamada, com voz gerada por IA.</small></p></li>
+        <li><time datetime="2026-10-06">6 out</time><p>App Android<small>Em teste interno na Play Store.</small></p></li>
+        <li><time datetime="2026-10-08">8 out</time><p>Denúncia e proteção de menores<small>Denunciar direto no app, com prioridade para casos graves.</small></p></li>
+        <li class="agora"><time datetime="2026-10-10">10 out</time><p>0.3.123, no ar<small>Tela lisa em placa AMD: o Fence passa a controlar o encoder.</small></p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="ferramentas">
+    <div class="miolo">
+      <div class="intro">
+        <h2>Com o que eu trabalho</h2>
+      </div>
+      <div class="ferramentas">
+        <div><h3>Linguagens</h3><p>JavaScript, TypeScript, Rust, C++, PHP, SQL.</p></div>
+        <div><h3>Tempo real e mídia</h3><p>WebRTC, LiveKit, WASAPI, WebAssembly, Web Audio.</p></div>
+        <div><h3>Interface</h3><p>React, Electron, React Native, Expo, three.js, WebGL, GSAP.</p></div>
+        <div><h3>Servidor e infra</h3><p>Node, Express, Docker, Caddy, Linux, GitHub Actions.</p></div>
+        <div><h3>Segurança</h3><p>argon2, JWT e JOSE, TOTP, OAuth, revisão de acesso e privacidade.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fim">
+    <div class="miolo">
+      <div>
+        <h2>Vamos conversar</h2>
+        <p>Projeto, vaga ou ideia: <a href="mailto:contato@fencenetwork.tech">contato@fencenetwork.tech</a></p>
+      </div>
+      <nav class="acoes" aria-label="Contato">
+        <a class="botao" href="https://github.com/madukads">GitHub</a>
+        <a class="botao" href="https://www.linkedin.com/in/marcos-martins-3bb956350/">LinkedIn</a>
+        <a class="botao botao--forte" href="https://fencenetwork.tech">fencenetwork.tech</a>
+      </nav>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Os efeitos tocam só quando a pessoa pede: mouse em cima, foco do teclado ou toque.
+  document.querySelectorAll('.cartao').forEach((cartao) => {
+    const video = cartao.querySelector('video');
+    const tocar = () => video.play().catch(() => {});
+    const parar = () => video.pause();
+    cartao.addEventListener('mouseenter', tocar);
+    cartao.addEventListener('mouseleave', parar);
+    cartao.addEventListener('focus', tocar);
+    cartao.addEventListener('blur', parar);
+    cartao.addEventListener('click', () => (video.paused ? tocar() : parar()));
+  });
+</script>
+</body>
+</html>
