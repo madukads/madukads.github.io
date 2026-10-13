@@ -505,7 +505,7 @@
 
   const raiz = document.documentElement;
   const capa = document.querySelector('.capa');
-  const canvas = document.getElementById('vivo');
+  let canvas = document.getElementById('vivo');
   const lista = document.getElementById('temas');
   const nome = document.getElementById('tema-nome');
   const desc = document.getElementById('tema-desc');
@@ -533,6 +533,11 @@
     fundo?.parar();
     fundo = null;
     if (t.cena) {
+      // parar() derruba o contexto WebGL de propósito, e um canvas perdido não
+      // volta: cada fundo ganha um canvas novo, como o app faz.
+      const novo = canvas.cloneNode(false);
+      canvas.replaceWith(novo);
+      canvas = novo;
       fundo = tocarFundo(canvas, t.cena, { cores: t.cores, reduzido: menosMovimento });
       pausarSePreciso();
       capa.dataset.vivo = '';
