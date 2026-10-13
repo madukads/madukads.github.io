@@ -8,25 +8,35 @@
 <meta property="og:title" content="Marcos Eduardo">
 <meta property="og:description" content="Criei o Fence sozinho: voz, chat e tela para quem joga, do primeiro commit ao app no ar.">
 <meta property="og:image" content="https://madukads.github.io/img/heroi-1200.webp">
-<meta name="theme-color" content="#08050f">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308050f'/%3E%3Cpath d='M9 26V12l7-7 7 7v14M13 26v-7a3 3 0 0 1 6 0v7' fill='none' stroke='%23a78bfa' stroke-width='2'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#04060b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2304060b'/%3E%3Cpath d='M9 26V12l7-7 7 7v14M13 26v-7a3 3 0 0 1 6 0v7' fill='none' stroke='%23b28fff' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Spectral:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
+  /* As cores vêm dos temas do Fence (app/src/renderer/src/lib/temas.js).
+     O script troca as bases; o resto é derivado delas. */
   :root {
-    --abismo: #08050f;
-    --nave: #130c22;
-    --nave-borda: #2a1d45;
-    --vitral: #8b5cf6;
-    --lirio: #c9b8fb;
-    --pergaminho: #ece6f6;
-    --penumbra: #a197b8;
+    --abismo: #04060b;
+    --abismo-rgb: 4 6 11;
+    --nave: #0b0f1a;
+    --vitral: #7e58ff;
+    --vitral-rgb: 126 88 255;
+    --lirio: #b28fff;
+    --linha: 196 205 255;
+    --hue: 0deg;
+    --sat: 1;
+
+    --pergaminho: color-mix(in srgb, rgb(var(--linha)) 22%, #f4f2f7);
+    --penumbra: color-mix(in srgb, rgb(var(--linha)) 42%, #7a7686);
+    --borda: rgb(var(--vitral-rgb) / .24);
     --vela: #f2b45a;
+
     --display: "Cinzel", "Trajan Pro", Georgia, serif;
     --texto: "Spectral", Georgia, serif;
     --gutter: clamp(16px, 5vw, 72px);
     --coluna: 40rem;
+    --troca: .7s ease;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -39,182 +49,228 @@
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background-color var(--troca), color var(--troca);
   }
-  img, video { display: block; max-width: 100%; }
-  a { color: var(--lirio); text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  img, video, canvas { display: block; max-width: 100%; }
+  a { color: var(--lirio); text-decoration-thickness: 1px; text-underline-offset: .2em; transition: color var(--troca); }
   a:hover { color: var(--pergaminho); }
   :focus-visible { outline: 2px solid var(--vela); outline-offset: 3px; border-radius: 4px; }
   h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.1; margin: 0; }
   h2 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); letter-spacing: .02em; }
-  h3 { font-size: 1.15rem; letter-spacing: .04em; color: var(--lirio); font-weight: 500; }
+  h3 { font-size: 1.15rem; letter-spacing: .04em; color: var(--lirio); font-weight: 500; transition: color var(--troca); }
   p { margin: 0 0 1em; }
 
-  /* ---------- Capa: a catedral acende ---------- */
+  /* ---------- Barra de cima: aparece depois da capa ---------- */
+  .barra {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    padding: 12px var(--gutter);
+    background: rgb(var(--abismo-rgb) / .82);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--borda);
+    transform: translateY(-100%);
+    transition: transform .35s ease, background-color var(--troca);
+  }
+  .barra.visivel { transform: none; }
+  .barra__nome { font-family: var(--display); font-weight: 700; letter-spacing: .05em; color: var(--pergaminho); text-decoration: none; }
+  .barra nav { display: flex; gap: clamp(14px, 2.5vw, 32px); }
+  .barra nav a { font-size: 1rem; text-decoration: none; color: var(--penumbra); }
+  .barra nav a:hover { color: var(--pergaminho); }
+
+  /* ---------- Capa ---------- */
   .capa {
     position: relative;
     min-height: 100svh;
     display: grid;
     grid-template-rows: auto 1fr auto;
-    padding: clamp(28px, 6vh, 64px) var(--gutter) clamp(32px, 7vh, 72px);
+    padding: clamp(28px, 6vh, 64px) var(--gutter) clamp(28px, 5vh, 56px);
     isolation: isolate;
     overflow: hidden;
   }
-  .capa__arte {
-    position: absolute; inset: 0; z-index: -2;
+  .capa__arte, .capa__vivo {
+    position: absolute; inset: 0; z-index: -3;
     width: 100%; height: 100%;
+    max-width: none;
+    transition: opacity .9s ease;
+  }
+  .capa__arte {
     object-fit: cover; object-position: 50% 62%;
-    animation: acender 2.8s cubic-bezier(.2,.7,.2,1) .15s both;
-    filter: brightness(1.05);
+    filter: hue-rotate(var(--hue)) saturate(var(--sat)) brightness(1.05);
+    animation: acender 2.8s cubic-bezier(.2,.7,.2,1) .15s backwards;
   }
+  .capa__vivo { opacity: 0; }
+  .capa[data-vivo] .capa__arte { opacity: 0; }
+  .capa[data-vivo] .capa__vivo { opacity: 1; }
   .capa__luz {
-    position: absolute; inset: 0; z-index: -1;
+    position: absolute; inset: 0; z-index: -2;
     background:
-      radial-gradient(38% 30% at 57% 56%, rgba(139,92,246,.30), transparent 70%),
-      linear-gradient(180deg, rgba(8,5,15,.9) 0%, rgba(8,5,15,.2) 32%, rgba(8,5,15,0) 52%, rgba(8,5,15,.55) 78%, rgba(8,5,15,1) 100%);
-    animation: vitrais 2.8s ease-out .9s both;
+      radial-gradient(38% 30% at 57% 56%, rgb(var(--vitral-rgb) / .28), transparent 70%),
+      linear-gradient(180deg, rgb(var(--abismo-rgb) / .88) 0%, rgb(var(--abismo-rgb) / .2) 32%, rgb(var(--abismo-rgb) / 0) 52%, rgb(var(--abismo-rgb) / .6) 76%, rgb(var(--abismo-rgb)) 100%);
+    transition: opacity .9s ease;
   }
-  @keyframes acender { from { filter: brightness(.08) saturate(.4); transform: scale(1.04); } to { filter: brightness(1.05) saturate(1.1); transform: scale(1); } }
-  @keyframes vitrais { from { opacity: .55; } to { opacity: 1; } }
+  .capa[data-vivo] .capa__luz {
+    background: linear-gradient(180deg, rgb(var(--abismo-rgb) / .35) 0%, rgb(var(--abismo-rgb) / 0) 30%, rgb(var(--abismo-rgb) / 0) 55%, rgb(var(--abismo-rgb) / .7) 80%, rgb(var(--abismo-rgb)) 100%);
+  }
+  @keyframes acender { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
 
   .capa__nome {
     text-align: center;
     font-size: clamp(2.6rem, 10.5vw, 9rem);
     letter-spacing: .06em;
     line-height: .95;
-    font-weight: 700;
-    text-shadow: 0 0 40px rgba(139,92,246,.55), 0 2px 0 rgba(0,0,0,.6);
+    text-shadow: 0 0 44px rgb(var(--vitral-rgb) / .6), 0 2px 0 rgb(0 0 0 / .6);
+    transition: text-shadow var(--troca);
   }
-  .capa__nome span { display: block; font-size: max(.28em, 1rem); letter-spacing: .2em; font-weight: 500; color: var(--lirio); margin-top: .5em; padding-left: .2em; }
+  .capa__nome span { display: block; font-size: max(.28em, 1rem); letter-spacing: .2em; padding-left: .2em; font-weight: 500; color: var(--lirio); margin-top: .5em; transition: color var(--troca); }
+
   .capa__rodape {
     grid-row: 3;
     width: 100%; max-width: 1180px; justify-self: center;
-    display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px 48px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 28px 56px;
   }
-  .capa__frase { max-width: 34rem; font-size: clamp(1.2rem, 2.2vw, 1.5rem); line-height: 1.5; margin: 0; }
-  .capa__frase em { color: var(--lirio); font-style: italic; }
+  .capa__frase { max-width: 34rem; font-size: clamp(1.2rem, 2.2vw, 1.5rem); line-height: 1.5; margin: 0 0 22px; }
+  .capa__frase em { color: var(--lirio); transition: color var(--troca); }
   .acoes { display: flex; flex-wrap: wrap; gap: 12px; }
   .botao {
-    display: inline-flex; align-items: center; gap: 10px;
+    display: inline-flex; align-items: center;
     padding: 12px 22px;
     font-family: var(--display); font-size: .95rem; font-weight: 500; letter-spacing: .06em;
     color: var(--pergaminho); text-decoration: none;
-    border: 1px solid rgba(201,184,251,.35);
+    border: 1px solid rgb(var(--linha) / .3);
     border-radius: 999px;
-    background: rgba(19,12,34,.55);
+    background: rgb(var(--abismo-rgb) / .5);
     backdrop-filter: blur(6px);
-    transition: border-color .2s, background .2s;
+    transition: border-color .2s, background-color var(--troca);
   }
-  .botao:hover { border-color: var(--lirio); background: rgba(139,92,246,.22); color: var(--pergaminho); }
+  .botao:hover { border-color: var(--lirio); background: rgb(var(--vitral-rgb) / .22); color: var(--pergaminho); }
   .botao--forte { background: var(--vitral); border-color: var(--vitral); }
-  .botao--forte:hover { background: #9d74ff; border-color: #9d74ff; }
+  .botao--forte:hover { background: var(--vitral); border-color: var(--pergaminho); }
+
+  /* Seletor de temas */
+  .temas {
+    width: min(100%, 25rem);
+    padding: 18px 20px 20px;
+    border-radius: 16px;
+    background: rgb(var(--abismo-rgb) / .62);
+    border: 1px solid var(--borda);
+    backdrop-filter: blur(12px);
+    transition: background-color var(--troca), border-color var(--troca);
+  }
+  .temas__atual { font-family: var(--display); font-size: 1.15rem; letter-spacing: .04em; margin: 0; }
+  .temas__desc { font-size: .98rem; color: var(--penumbra); margin: 2px 0 14px; min-height: 1.6em; }
+  .temas__lista { display: grid; grid-template-columns: repeat(6, minmax(0, 48px)); gap: 10px; }
+  .tema {
+    position: relative; aspect-ratio: 1; width: 100%;
+    border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, var(--c2) 0 18%, var(--c1) 55%, var(--c0) 100%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12);
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .tema:hover { transform: scale(1.08); }
+  .tema[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--abismo), 0 0 0 4px var(--pergaminho); }
+  .tema[data-vivo]::after {
+    content: ""; position: absolute; right: -1px; top: -1px; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--vela); box-shadow: 0 0 0 2px var(--abismo);
+  }
+  .temas__nota { margin: 14px 0 0; font-size: .85rem; color: var(--penumbra); line-height: 1.45; }
+  .temas__nota i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--vela); margin-right: 6px; vertical-align: .05em; }
 
   /* ---------- Seções ---------- */
-  section { padding: clamp(72px, 12vw, 150px) var(--gutter) 0; }
+  section { padding: clamp(72px, 12vw, 150px) var(--gutter) 0; scroll-margin-top: 40px; }
   .miolo { max-width: 1180px; margin: 0 auto; }
   .intro { max-width: var(--coluna); }
   .intro h2 { margin-bottom: .45em; }
-  .intro p { color: var(--pergaminho); }
   .apagado { color: var(--penumbra); }
+
+  /* Sobre */
+  .sobre .miolo { display: grid; grid-template-columns: auto minmax(0, 44rem); gap: clamp(28px, 5vw, 64px); align-items: center; }
+  .sobre__foto {
+    width: clamp(140px, 18vw, 220px); aspect-ratio: 1; border-radius: 50%; object-fit: cover;
+    box-shadow: 0 0 0 1px var(--borda), 0 0 0 10px rgb(var(--vitral-rgb) / .08), 0 30px 80px -20px rgb(var(--vitral-rgb) / .55);
+    transition: box-shadow var(--troca);
+  }
+  .sobre h2 { font-size: clamp(1.9rem, 4.2vw, 2.8rem); margin-bottom: .5em; }
+  .sobre p:last-child { margin: 0; }
 
   .print {
     margin: clamp(40px, 6vw, 64px) 0 0;
     border-radius: 14px;
-    border: 1px solid var(--nave-borda);
+    border: 1px solid var(--borda);
     overflow: hidden;
-    box-shadow: 0 40px 120px -30px rgba(139,92,246,.45);
+    box-shadow: 0 40px 120px -30px rgb(var(--vitral-rgb) / .45);
+    transition: box-shadow var(--troca), border-color var(--troca);
   }
-  .print figcaption { padding: 12px 18px; font-size: .95rem; color: var(--penumbra); background: var(--nave); border-top: 1px solid var(--nave-borda); }
+  .print img { filter: hue-rotate(var(--hue)) saturate(var(--sat)); transition: filter var(--troca); }
+  .print figcaption { padding: 12px 18px; font-size: .95rem; color: var(--penumbra); background: var(--nave); border-top: 1px solid var(--borda); }
 
-  .partes {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 40px 48px; margin-top: clamp(48px, 7vw, 80px);
-  }
+  .partes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px 48px; margin-top: clamp(48px, 7vw, 80px); }
   .partes h3 { margin-bottom: .55em; }
   .partes p { font-size: 1.05rem; color: var(--penumbra); margin: 0; }
   .partes strong { color: var(--pergaminho); font-weight: 500; }
 
-  /* Efeitos de perfil */
   .efeitos { margin-top: clamp(64px, 9vw, 110px); }
   .efeitos__topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 40px; margin-bottom: 28px; }
   .efeitos__topo p { max-width: 30rem; margin: 0; color: var(--penumbra); font-size: 1.05rem; }
   .cartoes { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(10px, 2vw, 22px); }
-  .cartao {
-    position: relative; margin: 0; padding: 0;
-    border: 0; background: none; cursor: pointer;
-    border-radius: 14px; overflow: hidden;
-    aspect-ratio: 524 / 978;
-  }
+  .cartao { position: relative; margin: 0; cursor: pointer; border-radius: 14px; overflow: hidden; aspect-ratio: 524 / 978; }
   .cartao video { width: 100%; height: 100%; object-fit: cover; }
   .cartao figcaption {
     position: absolute; left: 0; right: 0; bottom: 0;
     padding: 28px 14px 12px;
     font-family: var(--display); font-size: .9rem; letter-spacing: .05em; text-align: center;
-    background: linear-gradient(transparent, rgba(8,5,15,.92));
+    background: linear-gradient(transparent, rgb(var(--abismo-rgb) / .92));
   }
 
-  /* ---------- Por dentro ---------- */
-  .mapa { margin-top: clamp(40px, 6vw, 64px); display: grid; gap: 0; }
+  /* Por dentro */
+  .mapa { margin-top: clamp(40px, 6vw, 64px); display: grid; }
   .mapa__linha { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 3vw, 40px); }
-  .no {
-    background: var(--nave); border: 1px solid var(--nave-borda); border-radius: 12px;
-    padding: 20px 22px;
-  }
+  .no { background: var(--nave); border: 1px solid var(--borda); border-radius: 12px; padding: 20px 22px; transition: background-color var(--troca), border-color var(--troca); }
   .no h3 { color: var(--pergaminho); font-size: 1.1rem; margin-bottom: .35em; }
   .no p { margin: 0; font-size: 1rem; color: var(--penumbra); line-height: 1.5; }
   .no ul { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .no li { font-size: .85rem; padding: 3px 10px; border-radius: 999px; background: rgba(139,92,246,.14); color: var(--lirio); }
-  .no--midia { border-color: rgba(139,92,246,.55); box-shadow: inset 0 0 40px rgba(139,92,246,.12); }
-  .ligacao {
-    position: relative; display: grid; place-items: center;
-    min-height: 74px; padding: 10px 0;
-    font-size: .95rem; font-style: italic; color: var(--penumbra); text-align: center;
-  }
-  .ligacao::before {
-    content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
-    background: linear-gradient(var(--nave-borda), var(--vitral), var(--nave-borda));
-  }
-  .ligacao span { position: relative; background: var(--abismo); padding: 4px 12px; max-width: 18rem; line-height: 1.35; }
+  .no li { font-size: .85rem; padding: 3px 10px; border-radius: 999px; background: rgb(var(--vitral-rgb) / .15); color: var(--lirio); }
+  .no--midia { border-color: rgb(var(--vitral-rgb) / .6); box-shadow: inset 0 0 40px rgb(var(--vitral-rgb) / .12); }
+  .ligacao { position: relative; display: grid; place-items: center; min-height: 74px; padding: 10px 0; font-size: .95rem; font-style: italic; color: var(--penumbra); text-align: center; }
+  .ligacao::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: linear-gradient(var(--borda), var(--vitral), var(--borda)); }
+  .ligacao span { position: relative; background: var(--abismo); padding: 4px 12px; max-width: 18rem; line-height: 1.35; transition: background-color var(--troca); }
   .mapa__lado { position: relative; }
-  .mapa__lado .ligacao--h {
-    position: absolute; top: 50%; left: 100%; width: clamp(14px, 3vw, 40px); height: 1px;
-    background: var(--vitral); min-height: 0; padding: 0;
-  }
-  .mapa__lado .ligacao--h::before { display: none; }
-  .ligacao--h b { position: absolute; left: 50%; top: -1.7em; transform: translateX(-50%); font-weight: 400; font-size: .8rem; color: var(--penumbra); }
+  .ligacao--h { position: absolute; top: 50%; left: 100%; width: clamp(14px, 3vw, 40px); height: 1px; background: var(--vitral); }
+  .ligacao--h b { position: absolute; left: 50%; top: -1.7em; transform: translateX(-50%); font-weight: 400; font-size: .8rem; color: var(--penumbra); white-space: nowrap; }
 
-  /* ---------- Linha do tempo ---------- */
+  /* Linha do tempo */
   .tempo { list-style: none; margin: clamp(40px, 6vw, 64px) 0 0; padding: 0; max-width: 46rem; position: relative; }
-  .tempo::before { content: ""; position: absolute; left: 7.4rem; top: 10px; bottom: 10px; width: 1px; background: linear-gradient(var(--vitral), var(--nave-borda)); }
+  .tempo::before { content: ""; position: absolute; left: 7.4rem; top: 10px; bottom: 10px; width: 1px; background: linear-gradient(var(--vitral), var(--borda)); }
   .tempo li { display: grid; grid-template-columns: 6.4rem 1fr; gap: 0 2rem; padding: 0 0 26px; position: relative; }
-  .tempo li::before {
-    content: ""; position: absolute; left: calc(7.4rem - 4px); top: .62em;
-    width: 9px; height: 9px; border-radius: 50%; background: var(--abismo); border: 1px solid var(--vitral);
-  }
+  .tempo li::before { content: ""; position: absolute; left: calc(7.4rem - 4px); top: .62em; width: 9px; height: 9px; border-radius: 50%; background: var(--abismo); border: 1px solid var(--vitral); }
   .tempo time { font-family: var(--display); font-size: .95rem; letter-spacing: .04em; color: var(--lirio); text-align: right; padding-top: .1em; }
   .tempo p { margin: 0; }
   .tempo small { display: block; font-size: .9rem; color: var(--penumbra); }
-  .tempo .agora::before { background: var(--vela); border-color: var(--vela); box-shadow: 0 0 0 5px rgba(242,180,90,.18), 0 0 18px rgba(242,180,90,.7); }
+  .tempo .agora::before { background: var(--vela); border-color: var(--vela); box-shadow: 0 0 0 5px rgb(242 180 90 / .18), 0 0 18px rgb(242 180 90 / .7); }
   .tempo .agora time { color: var(--vela); }
 
-  /* ---------- Ferramentas ---------- */
   .ferramentas { margin-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 36px 56px; }
   .ferramentas h3 { margin-bottom: .6em; }
   .ferramentas p { margin: 0; font-size: 1.05rem; color: var(--penumbra); }
 
-  /* ---------- Fim ---------- */
   .fim { padding-bottom: clamp(64px, 10vw, 120px); }
-  .fim .miolo { border-top: 1px solid var(--nave-borda); padding-top: clamp(56px, 8vw, 96px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 32px; }
+  .fim .miolo { border-top: 1px solid var(--borda); padding-top: clamp(56px, 8vw, 96px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 32px; }
   .fim h2 { font-size: clamp(2rem, 4.5vw, 3rem); }
   .fim p { margin: .6em 0 0; color: var(--penumbra); }
 
   @media (max-width: 1080px) { .partes { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) {
+    .capa__rodape { grid-template-columns: 1fr; }
+    .temas { width: 100%; }
+  }
   @media (max-width: 760px) {
-    .partes { grid-template-columns: 1fr; }
-    .mapa__linha:nth-child(2) { display: none; }
     body { font-size: 1.0625rem; }
+    .barra nav a:not(:last-child) { display: none; }
+    .sobre .miolo { grid-template-columns: 1fr; }
+    .partes { grid-template-columns: 1fr; }
     .cartoes { grid-template-columns: repeat(2, 1fr); }
     .mapa__linha { grid-template-columns: 1fr; gap: 14px; }
-    .mapa__lado .ligacao--h { display: none; }
+    .mapa__linha.so-largo { display: none; }
+    .ligacao--h { display: none; }
     .tempo::before { left: 4px; }
     .tempo li { grid-template-columns: 1fr; padding-left: 28px; }
     .tempo li::before { left: 0; }
@@ -228,23 +284,54 @@
 </head>
 <body>
 
-<header class="capa">
+<div class="barra" id="barra">
+  <a class="barra__nome" href="#topo">Marcos Eduardo</a>
+  <nav aria-label="Seções">
+    <a href="#fence">Fence</a>
+    <a href="#por-dentro">Por dentro</a>
+    <a href="#linha-do-tempo">Linha do tempo</a>
+    <a href="#contato">Contato</a>
+  </nav>
+</div>
+
+<header class="capa" id="topo">
   <img class="capa__arte" src="img/jogo.webp" alt="" fetchpriority="high">
+  <canvas class="capa__vivo" id="vivo" aria-hidden="true"></canvas>
   <div class="capa__luz" aria-hidden="true"></div>
 
   <h1 class="capa__nome">Marcos Eduardo<span>cibersegurança e código</span></h1>
 
   <div class="capa__rodape">
-    <p class="capa__frase">Criei o <em>Fence</em> sozinho: voz, chat e tela para quem joga, do primeiro commit ao app no ar, com servidor próprio em São Paulo.</p>
-    <nav class="acoes" aria-label="Links principais">
-      <a class="botao botao--forte" href="https://fencenetwork.tech">Baixar o Fence</a>
-      <a class="botao" href="https://www.linkedin.com/in/marcos-martins-3bb956350/">LinkedIn</a>
-      <a class="botao" href="mailto:contato@fencenetwork.tech">E-mail</a>
-    </nav>
+    <div>
+      <p class="capa__frase">Criei o <em>Fence</em> sozinho: voz, chat e tela para quem joga, do primeiro commit ao app no ar, com servidor próprio em São Paulo.</p>
+      <nav class="acoes" aria-label="Links principais">
+        <a class="botao botao--forte" href="https://fencenetwork.tech">Baixar o Fence</a>
+        <a class="botao" href="https://www.linkedin.com/in/marcos-martins-3bb956350/">LinkedIn</a>
+        <a class="botao" href="mailto:contato@fencenetwork.tech">E-mail</a>
+      </nav>
+    </div>
+
+    <div class="temas" role="group" aria-labelledby="tema-nome">
+      <p class="temas__atual" id="tema-nome">Gótico</p>
+      <p class="temas__desc" id="tema-desc" aria-live="polite">o roxo de sempre</p>
+      <div class="temas__lista" id="temas"></div>
+      <p class="temas__nota"><i></i>Os temas do app, com o mesmo código. Os marcados têm fundo animado.</p>
+    </div>
   </div>
 </header>
 
 <main>
+  <section class="sobre" id="sobre">
+    <div class="miolo">
+      <img class="sobre__foto" src="https://avatars.githubusercontent.com/u/116135943?s=440" alt="Marcos Eduardo" width="220" height="220" loading="lazy">
+      <div>
+        <h2>Oi, eu sou o Marcos</h2>
+        <p>Engenheiro de cibersegurança. Gosto de construir o produto inteiro: do módulo nativo que captura o áudio do Windows até a tela que a pessoa vê, passando pelo servidor e pela segurança das contas.</p>
+        <p class="apagado">Meço antes de afirmar e publico rápido. O Fence teve mais de 180 versões em seis semanas.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="fence">
     <div class="miolo">
       <div class="intro">
@@ -255,7 +342,7 @@
 
       <figure class="print">
         <img src="img/heroi-1200.webp" alt="Fence com o servidor A Cerca aberto: canais de voz à esquerda, chat no meio e membros à direita" width="1200" height="749" loading="lazy">
-        <figcaption>O servidor de exemplo do site, com o tema Gótico.</figcaption>
+        <figcaption>O servidor de exemplo do site. A captura acompanha o tema que você escolheu lá em cima.</figcaption>
       </figure>
 
       <div class="partes">
@@ -316,7 +403,7 @@
           <div class="no">
             <h3>App de Windows</h3>
             <p>Electron e React. Módulos nativos para o que o navegador não alcança.</p>
-            <ul><li>React</li><li>Rust: sobreposição</li><li>C++: áudio</li><li>three.js</li></ul>
+            <ul><li>React</li><li>Rust: sobreposição</li><li>C++: áudio</li><li>WebGL</li></ul>
           </div>
           <div class="no">
             <h3>App Android</h3>
@@ -325,7 +412,7 @@
           </div>
         </div>
 
-        <div class="mapa__linha">
+        <div class="mapa__linha so-largo">
           <div class="ligacao"><span>HTTPS e WebSocket: login, chat, presença</span></div>
           <div class="ligacao"><span>WebRTC por UDP: voz, câmera e tela</span></div>
         </div>
@@ -335,7 +422,7 @@
             <h3>Servidor</h3>
             <p>Node e Express atrás do Caddy, em Docker, num servidor em São Paulo.</p>
             <ul><li>argon2</li><li>JWT</li><li>TOTP</li><li>WebSocket</li></ul>
-            <i class="ligacao ligacao--h" aria-hidden="true"><b>passe</b></i>
+            <i class="ligacao--h" aria-hidden="true"><b>passe</b></i>
           </div>
           <div class="no no--midia">
             <h3>LiveKit</h3>
@@ -344,7 +431,7 @@
           </div>
         </div>
 
-        <div class="mapa__linha">
+        <div class="mapa__linha so-largo">
           <div class="ligacao"><span>APIs dos jogos e serviços</span></div>
           <div></div>
         </div>
@@ -361,14 +448,14 @@
     <div class="miolo">
       <div class="intro">
         <h2>Seis semanas</h2>
-        <p>Algumas das versões que saíram até aqui, das 185 marcadas no repositório.</p>
+        <p>Algumas das versões que saíram até aqui.</p>
       </div>
       <ol class="tempo">
         <li><time datetime="2026-09-02">2 set</time><p>Primeiro commit<small>Voz, tela e chat num servidor próprio.</small></p></li>
         <li><time datetime="2026-09-12">12 set</time><p>Contas de verdade<small>E-mail confirmado, login com Google e Steam, 2FA para administrador.</small></p></li>
         <li><time datetime="2026-09-13">13 set</time><p>Atualização silenciosa<small>O app se atualiza sozinho a partir do próprio servidor.</small></p></li>
         <li><time datetime="2026-09-23">23 set</time><p>Sobreposição nos jogos<small>Painel por cima do jogo, escrito em Rust.</small></p></li>
-        <li><time datetime="2026-09-28">28 set</time><p>Temas animados e clipes<small>Shaders no fundo do app. Clipes do Allstar chegam na conversa.</small></p></li>
+        <li><time datetime="2026-09-28">28 set</time><p>Temas animados e clipes<small>Os shaders que rodam lá em cima. Clipes do Allstar chegam na conversa.</small></p></li>
         <li><time datetime="2026-10-01">1 out</time><p>Efeitos de perfil<small>Partículas e física no cartão inteiro.</small></p></li>
         <li><time datetime="2026-10-02">2 out</time><p>Tela de chamada nova<small>Grade automática, câmera e barra de controles.</small></p></li>
         <li><time datetime="2026-10-05">5 out</time><p>Mascote que fala<small>Avisos falados na chamada, com voz gerada por IA.</small></p></li>
@@ -385,7 +472,7 @@
         <h2>Com o que eu trabalho</h2>
       </div>
       <div class="ferramentas">
-        <div><h3>Linguagens</h3><p>JavaScript, TypeScript, Rust, C++, PHP, SQL.</p></div>
+        <div><h3>Linguagens</h3><p>JavaScript, TypeScript, Rust, C++, GLSL, PHP, SQL.</p></div>
         <div><h3>Tempo real e mídia</h3><p>WebRTC, LiveKit, WASAPI, WebAssembly, Web Audio.</p></div>
         <div><h3>Interface</h3><p>React, Electron, React Native, Expo, three.js, WebGL, GSAP.</p></div>
         <div><h3>Servidor e infra</h3><p>Node, Express, Docker, Caddy, Linux, GitHub Actions.</p></div>
@@ -394,7 +481,7 @@
     </div>
   </section>
 
-  <section class="fim">
+  <section class="fim" id="contato">
     <div class="miolo">
       <div>
         <h2>Vamos conversar</h2>
@@ -409,8 +496,82 @@
   </section>
 </main>
 
-<script>
-  // Os efeitos tocam só quando a pessoa pede: mouse em cima, foco do teclado ou toque.
+<script type="module">
+  // fundoVivo.js é o arquivo do app, sem mudança nenhuma.
+  import { tocarFundo } from './js/fundoVivo.js';
+
+  // Copiados de app/src/renderer/src/lib/temas.js.
+  const TEMAS = {"gotico":{"n":"Gótico","d":"o roxo de sempre","bg0":"#04060b","bg2":"#0b0f1a","a":"#7e58ff","a2":"#b28fff","argb":"126 88 255","linha":"196 205 255","hue":"0deg","sat":"1"},"sangue":{"n":"Sangue","d":"vermelho profundo","bg0":"#0b0304","bg2":"#1d0b10","a":"#e0384e","a2":"#ff7a8a","argb":"224 56 78","linha":"255 200 205","hue":"95deg","sat":"1.05"},"esmeralda":{"n":"Esmeralda","d":"verde escuro","bg0":"#020906","bg2":"#071b14","a":"#2fbf7a","a2":"#6fe0ab","argb":"47 191 122","linha":"200 255 225","hue":"-106deg","sat":"1.1"},"cobre":{"n":"Cobre","d":"âmbar quente","bg0":"#0b0603","bg2":"#1e1408","a":"#e5762b","a2":"#ffa766","argb":"229 118 43","linha":"255 225 200","hue":"128deg","sat":"1.05"},"aurora":{"n":"Aurora","d":"luz do norte, viva","bg0":"#02090c","bg2":"#07191f","a":"#1fbfae","a2":"#7cebdc","argb":"31 191 174","linha":"190 245 238","hue":"-95deg","sat":"1","cena":"aurora","cores":["#1fe0b0","#3a7bff","#a45cff"]},"galaxia":{"n":"Galáxia","d":"estrelas passando","bg0":"#03040b","bg2":"#0a0d21","a":"#5773ff","a2":"#a3b3ff","argb":"87 115 255","linha":"200 210 255","hue":"-25deg","sat":"1","cena":"galaxia","cores":["#9fb4ff","#ffc7ec","#6fe3ff"]},"neon":{"n":"Neon","d":"véu rosa e ciano","bg0":"#09040d","bg2":"#190b20","a":"#f0409f","a2":"#ff94cf","argb":"240 64 159","linha":"255 205 235","hue":"60deg","sat":"1.1","cena":"veu","cores":["#ff3fae","#33d2ff","#14061f"]},"catedral":{"n":"Catedral","d":"luz de vitral, prata","bg0":"#050608","bg2":"#0f1217","a":"#6379ab","a2":"#c3cfea","argb":"99 121 171","linha":"215 222 240","hue":"0deg","sat":"0.15","cena":"raios","cores":["#eef2ff","#6f82ad","#ffffff"]},"vigilia":{"n":"Vigília","d":"tem alguém olhando","bg0":"#050203","bg2":"#12080a","a":"#b8211a","a2":"#ff7a5c","argb":"184 33 26","linha":"255 205 200","hue":"160deg","sat":"1.1","cena":"olhos","cores":["#ff2414","#ffd08a","#16080a"]},"visceral":{"n":"Visceral","d":"veias que batem","bg0":"#070102","bg2":"#170507","a":"#c4122f","a2":"#ff6680","argb":"196 18 47","linha":"255 200 208","hue":"150deg","sat":"1.3","cena":"veias","cores":["#ff2246","#5c0012","#1a0306"]},"cinzas":{"n":"Cinzas","d":"névoa e cinza caindo","bg0":"#050607","bg2":"#101215","a":"#8a6a55","a2":"#d8b39a","argb":"138 106 85","linha":"220 222 226","hue":"0deg","sat":"0.2","cena":"nevoa","cores":["#8e949c","#ff7a2e","#0d0f12"]},"sinal":{"n":"Sinal Perdido","d":"a fita que não devia existir","bg0":"#030504","bg2":"#0b110e","a":"#3f9f63","a2":"#9df0b8","argb":"63 159 99","linha":"200 245 215","hue":"-60deg","sat":"0.8","cena":"estatica","cores":["#8dffb0","#ff1f3a","#040806"]}};
+
+  const raiz = document.documentElement;
+  const capa = document.querySelector('.capa');
+  const canvas = document.getElementById('vivo');
+  const lista = document.getElementById('temas');
+  const nome = document.getElementById('tema-nome');
+  const desc = document.getElementById('tema-desc');
+  const corDoTema = document.querySelector('meta[name="theme-color"]');
+  const menosMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(' ');
+
+  let fundo = null;
+  let capaVisivel = true;
+  const pausarSePreciso = () => fundo?.pausar(!capaVisivel || document.hidden);
+
+  function aplicar(id) {
+    const t = TEMAS[id] || TEMAS.gotico;
+    const v = {
+      '--abismo': t.bg0, '--abismo-rgb': rgb(t.bg0), '--nave': t.bg2,
+      '--vitral': t.a, '--vitral-rgb': t.argb, '--lirio': t.a2,
+      '--linha': t.linha, '--hue': t.hue, '--sat': t.sat,
+    };
+    for (const [k, val] of Object.entries(v)) raiz.style.setProperty(k, val);
+    corDoTema.content = t.bg0;
+    nome.textContent = t.n;
+    desc.textContent = t.d;
+    lista.querySelectorAll('.tema').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+
+    fundo?.parar();
+    fundo = null;
+    if (t.cena) {
+      fundo = tocarFundo(canvas, t.cena, { cores: t.cores, reduzido: menosMovimento });
+      pausarSePreciso();
+      capa.dataset.vivo = '';
+    } else {
+      delete capa.dataset.vivo;
+    }
+    try { localStorage.setItem('tema', id); } catch {}
+  }
+
+  for (const [id, t] of Object.entries(TEMAS)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tema';
+    b.dataset.id = id;
+    if (t.cena) b.dataset.vivo = '';
+    b.setAttribute('aria-label', `Tema ${t.n}${t.cena ? ', com fundo animado' : ''}`);
+    b.title = t.n;
+    b.style.setProperty('--c0', t.bg2);
+    b.style.setProperty('--c1', t.a);
+    b.style.setProperty('--c2', t.a2);
+    b.addEventListener('click', () => aplicar(id));
+    lista.append(b);
+  }
+
+  // ?tema=aurora abre direto num tema (bom para mandar o link)
+  let salvo = new URLSearchParams(location.search).get('tema');
+  try { if (!TEMAS[salvo]) salvo = localStorage.getItem('tema'); } catch {}
+  aplicar(TEMAS[salvo] ? salvo : 'gotico');
+
+  // Como no app: o fundo para quando ninguém está olhando.
+  const barra = document.getElementById('barra');
+  new IntersectionObserver(([e]) => {
+    capaVisivel = e.isIntersecting;
+    barra.classList.toggle('visivel', !e.isIntersecting);
+    pausarSePreciso();
+  }, { threshold: 0.05 }).observe(capa);
+  document.addEventListener('visibilitychange', pausarSePreciso);
+
+  // Os efeitos tocam só quando a pessoa pede.
   document.querySelectorAll('.cartao').forEach((cartao) => {
     const video = cartao.querySelector('video');
     const tocar = () => video.play().catch(() => {});
